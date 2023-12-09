@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, File, UploadFile, Depends, Body, Request
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from typing import Dict, List
 from bson import ObjectId
 import uvicorn
@@ -18,7 +19,17 @@ logging.basicConfig(
 )
 
 app = FastAPI()
-
+# How do i h8 this sh&t
+# You cant even imagine!
+origins = ["*"]
+# New params for CORS settings
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def add_timestamp_to_data(data):
     timestamp = datetime.utcnow().isoformat()
