@@ -1,14 +1,22 @@
 from fastapi import FastAPI, HTTPException, File, UploadFile, Depends, Body
 from fastapi.responses import FileResponse, JSONResponse
 from typing import Dict, List
-import json
 from bson import ObjectId
 import uvicorn
 import json
 from datetime import datetime
 from pymongo import MongoClient
+import logging
 
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler("logfile.log"),
+        logging.StreamHandler()
+    ]
+)
 
 app = FastAPI()
 def add_timestamp_to_data(data):
@@ -118,6 +126,12 @@ async def show_specific_version(
     # Return a custom JSONResponse with the modified data
     return JSONResponse(content=result)
 
+
+@app.get("/back/")
+def read_root():
+    logging.info("Root route accessed")
+    return {"Hello": "World"}
+
 @app.get("/back/get_all_versions", response_model=List[dict])
 async def get_all_versions(db=Depends(get_database)):
     collection = db["my_collection"]
@@ -140,6 +154,7 @@ async def get_pdf_file():
     """
     Return a PDF file stored in the API directory.
     """
+    print("Getted req")
     pdf_path = "A.pdf"
     return FileResponse(pdf_path, media_type="application/pdf")
 
