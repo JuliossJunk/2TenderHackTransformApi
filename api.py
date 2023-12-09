@@ -52,13 +52,13 @@ def compare_json(json1: Dict, json2: Dict) -> Dict:
     for key in json1.keys():
         if key in json2:
             if json1[key] != json2[key]:
-                differences[key] = {"old": json1[key], "new": json2[key]}
+                differences[key] = {"new": json1[key], "old": json2[key]}
         else:
-            differences[key] = {"old": json1[key], "new": None}
+            differences[key] = {"new": json1[key], "old": None}
 
     for key in json2.keys():
         if key not in json1:
-            differences[key] = {"old": None, "new": json2[key]}
+            differences[key] = {"new": None, "old": json2[key]}
 
     return differences
 
@@ -68,7 +68,7 @@ def get_database():
     yield db
     client.close()
 
-@app.post("/compare-json")
+@app.post("/back/compare-json")
 async def compare_json_files(json_body: Dict):
     """
     Compare the JSON in the request body with the JSON from a file in the API directory.
@@ -90,7 +90,7 @@ async def compare_json_files(json_body: Dict):
     print(data_by_id)
     return {"differences": differences}
 
-@app.post("/show_specific_version", response_model=dict)
+@app.post("/back/show_specific_version", response_model=dict)
 async def show_specific_version(
     request_body: dict = Body(...),
     db=Depends(get_database)
@@ -118,7 +118,7 @@ async def show_specific_version(
     # Return a custom JSONResponse with the modified data
     return JSONResponse(content=result)
 
-@app.get("/get_all_versions", response_model=List[dict])
+@app.get("/back/get_all_versions", response_model=List[dict])
 async def get_all_versions(db=Depends(get_database)):
     collection = db["my_collection"]
 
@@ -135,12 +135,12 @@ async def get_all_versions(db=Depends(get_database)):
 
     # Return the results directly
     return results
-@app.get("/pdf-file")
+@app.get("/back/pdf-file")
 async def get_pdf_file():
     """
     Return a PDF file stored in the API directory.
     """
-    pdf_path = "Договор на поставку товара № 129-23.pdf"
+    pdf_path = "A.pdf"
     return FileResponse(pdf_path, media_type="application/pdf")
 
 
