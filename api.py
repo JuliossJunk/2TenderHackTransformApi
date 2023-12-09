@@ -8,6 +8,8 @@ import json
 from datetime import datetime
 from pymongo import MongoClient
 import logging
+from secondTryToChange import changing_Everything
+from createPDF import convert_and_save
 
 logging.basicConfig(
     level=logging.INFO,
@@ -218,12 +220,13 @@ async def get_all_versions( request: Request, db=Depends(get_database)):
 
 
 @app.get("/back/pdf-file")
-async def get_pdf_file():
+async def get_pdf_file(request: Request):
     """
-    Return a PDF file stored in the API directory.
+    Return a PDF file stored in the API directory. Via some magic ofc
     """
-    print("Getted req")
-    pdf_path = "A.pdf"
+    etalonid = '6574ddd25d85588d3f5fd5d2'
+    fileid = request.query_params.get("_id")
+    pdf_path = convert_and_save(changing_Everything(etalonid, fileid), 'modified_A.pdf')
     return FileResponse(pdf_path, media_type="application/pdf")
 
 
