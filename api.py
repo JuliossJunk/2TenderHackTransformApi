@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, File, UploadFile, Depends, Body
+from fastapi import FastAPI, HTTPException, File, UploadFile, Depends, Body, Request
 from fastapi.responses import FileResponse, JSONResponse
 from typing import Dict, List
 from bson import ObjectId
@@ -133,18 +133,29 @@ def read_root():
     return {"Hello": "World"}
 
 @app.get("/back/get_all_versions", response_model=List[dict])
-async def get_all_versions(db=Depends(get_database)):
-    collection = db["my_collection"]
+async def get_all_versions(request: Request, db=Depends(get_database)):
+    # Get the query parameters
+    providerID = request.query_params.get("ProviderID")
+    customerID = request.query_params.get("CustomerID")
 
-    # Correct field names and ObjectId conversion
+    # Construct the filter
+    filtering = {}
+    if providerID:
+        filtering["ProviderID"] = providerID
+    if customerID:
+        filtering["CustomerID"] = customerID
+
+    # Apply the filter and convert the results
     results = [
         {
             "_id": str(result["_id"]),
             "Author": result.get("Author", ""),
+            "ProviderID":result.get("ProviderID", ""),
+            "CustomerID": result.get("CustomerID", ""),
             "Comment": result.get("Comment", ""),
             "timestamp": result.get("timestamp", "")
         }
-        for result in collection.find({}, {"_id": 1, "Author": 1, "Comment": 1, "timestamp": 1})
+        for result in db["my_collection"].find(filtering, {"_id": 1, "Author": 1, "ProviderID": 1, "CustomerID": 1, "Comment": 1, "timestamp": 1})
     ]
 
     # Return the results directly
