@@ -82,8 +82,10 @@ def changing_Everything(etalon_id, wanted_id):
     # Save the modified document
     modified_docx_file_path = 'modified_A.docx'
     doc.save(modified_docx_file_path)
+    #print(f"Document successfully modified. Saved as: {modified_docx_file_path}")
 
-    print(f"Document successfully modified. Saved as: {modified_docx_file_path}")
+    return modified_docx_file_path
+
 
 def search_substring_in_docx(docx_path, substring):
     """
