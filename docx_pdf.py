@@ -23,7 +23,8 @@ def convert_docx_to_pdf(docx_file_path, pdf_file_path):
     pdf_canvas.save()
 
 if __name__ == "__main__":
-    docx_file_path = "example.docx"  # Replace with the path to your DOCX file
-    pdf_file_path = "output.pdf"  # Replace with the desired output PDF path
+    docx_file_path = "A.docx"  # Replace with the path to your DOCX file
+    docx_file_outpath = "A.pdf"  # Replace with the desired output PDF path
 
-    convert_docx_to_pdf(docx_file_path, pdf_file_path)
+    #convert_docx_to_pdf(docx_file_path, pdf_file_path)
+    convert(docx_file_path, docx_file_outpath)
