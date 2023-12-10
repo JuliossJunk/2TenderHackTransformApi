@@ -3,6 +3,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Dict, List
 from bson import ObjectId
+from bson.json_util import dumps
 import uvicorn
 import json
 from datetime import datetime
@@ -10,6 +11,7 @@ from pymongo import MongoClient
 import logging
 from secondTryToChange import changing_Everything
 from createPDF import convert_and_save
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -229,6 +231,29 @@ async def get_pdf_file(request: Request):
     pdf_path = convert_and_save(changing_Everything(etalonid, fileid), 'modified_A.pdf')
     return FileResponse(pdf_path, media_type="application/pdf")
 
+@app.get("/back/get_current_version", response_model=Dict)
+def get_current_version(db: MongoClient = Depends(get_database)):
+    try:
+        # Specify the collection name
+        collection_name = "my_collection"
+
+        # Query MongoDB to find the document with the newest timestamp and "Podpisant" and "Postavshik" as "True"
+        result = db[collection_name].find_one(
+            {"Podpisant": "True", "Postavshik": "True"},
+            sort=[("timestamp", -1)]
+        )
+
+        # Check if any matching documents were found
+        if result is None:
+            raise HTTPException(status_code=404, detail="No matching documents found")
+
+        # Convert ObjectId to string
+        result["_id"] = str(result["_id"])
+
+        return result
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     # client = MongoClient("mongodb://bulbaman.me:16017")
