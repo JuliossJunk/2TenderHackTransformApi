@@ -5,3 +5,4 @@ pymongo==4.6.1
 python_docx==1.1.0
 reportlab==4.0.7
 uvicorn==0.24.0.post1
+pypandoc~=1.12

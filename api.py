@@ -10,7 +10,7 @@ from datetime import datetime
 from pymongo import MongoClient
 import logging
 from secondTryToChange import changing_Everything
-from createPDF import convert_and_save
+from createPDF import convert_and_save, convert_docx_to_pdf
 
 
 logging.basicConfig(
@@ -228,7 +228,7 @@ async def get_pdf_file(request: Request):
     """
     etalonid = '6574ddd25d85588d3f5fd5d2'
     fileid = request.query_params.get("_id")
-    pdf_path = convert_and_save(changing_Everything(etalonid, fileid), 'modified_A.pdf')
+    pdf_path = convert_docx_to_pdf(changing_Everything(etalonid, fileid), 'modified_A.pdf')
     return FileResponse(pdf_path, media_type="application/pdf")
 
 @app.get("/back/get_current_version", response_model=Dict)
