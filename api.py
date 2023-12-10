@@ -1,7 +1,7 @@
-from fastapi import FastAPI, HTTPException, File, UploadFile, Depends, Body, Request
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi import FastAPI, HTTPException, File, UploadFile, Depends, Body, Request, BackgroundTasks
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Dict, List
+from typing import Dict, List, Annotated
 from bson import ObjectId
 from bson.json_util import dumps
 import uvicorn
@@ -11,7 +11,10 @@ from pymongo import MongoClient
 import logging
 from secondTryToChange import changing_Everything
 from createPDF import convert_and_save, convert_docx_to_pdf
-
+from file_zip_handler import save_to_zip
+from zipfile import ZipFile
+from io import BytesIO
+import os
 
 logging.basicConfig(
     level=logging.INFO,
@@ -34,6 +37,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 def add_timestamp_to_data(data):
     timestamp = datetime.utcnow().isoformat()
@@ -95,6 +99,56 @@ def get_database():
     yield db
     client.close()
 
+
+async def process_form_data(background_tasks: BackgroundTasks, files: List[UploadFile], key: str):
+    """
+    Event handler to process form data with a key and files.
+    """
+    # You can perform any processing logic here
+    # For example, save the files or do something with the key
+
+    # In this example, we'll just print the key and file details
+    print(f"Received key: {key}")
+
+    # Prepare file information for saving to a zip archive
+    files_info = [{'filename': file.filename, 'content': await file.read()} for file in files]
+
+    # Enqueue the task to save files to a zip archive
+    background_tasks.add_task(save_to_zip, files_info, zip_filename='output.zip')
+
+
+# Global variable to store the filename
+uploaded_filename = None
+
+@app.post("/back/upload_file")
+async def upload_file(file: UploadFile = File(...)):
+    global uploaded_filename
+    # Save the uploaded file with the name "dropped_file"
+    uploaded_filename = file.filename  # Keep the file extension
+    with open(uploaded_filename, "wb") as f:
+        f.write(file.file.read())
+
+    # Store the filename in the global variable
+    uploaded_filename = uploaded_filename
+
+    return {"filename": uploaded_filename}
+
+# Raw method
+@app.get("/back/download_zip")
+async def download_file():
+    global uploaded_filename
+    # Check if a filename is stored in the global variable
+    if not uploaded_filename:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    # Create a zip archive
+    zip_filename = "output.zip"
+    with ZipFile(zip_filename, 'w') as zip_file:
+        # Add the dropped file to the zip archive
+        zip_file.write(uploaded_filename)
+
+    # Return the zip archive as a response
+    return FileResponse(zip_filename, media_type='application/zip', filename=zip_filename)
 
 @app.post("/back/compare-json")
 async def compare_json_files(json_body: Dict):
@@ -187,7 +241,7 @@ async def get_all_versions(request: Request, db=Depends(get_database)):
 
 
 @app.get("/back/get_difference", response_model=Dict)
-async def get_all_versions( request: Request, db=Depends(get_database)):
+async def get_all_versions(request: Request, db=Depends(get_database)):
     # Get the query parameters
     fileid = request.query_params.get("_id")
     collection = db["my_collection"]
@@ -228,8 +282,10 @@ async def get_pdf_file(request: Request):
     """
     etalonid = '6574ddd25d85588d3f5fd5d2'
     fileid = request.query_params.get("_id")
+    # Change for better performance if you use windows server X(
     pdf_path = convert_docx_to_pdf(changing_Everything(etalonid, fileid), 'modified_A.pdf')
     return FileResponse(pdf_path, media_type="application/pdf")
+
 
 @app.get("/back/get_current_version", response_model=Dict)
 def get_current_version(db: MongoClient = Depends(get_database)):
@@ -254,6 +310,7 @@ def get_current_version(db: MongoClient = Depends(get_database)):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 if __name__ == "__main__":
     # client = MongoClient("mongodb://bulbaman.me:16017")
