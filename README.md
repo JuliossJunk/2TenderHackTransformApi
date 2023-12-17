@@ -55,7 +55,7 @@ Returns all versions of the document that only these users have worked on
 
 # Authors
 
-- [@octokatherine](https://www.github.com/octokatherine)
+- [@JuliossJunk](https://www.github.com/JuliossJunk)
 
 
 # Appendix
